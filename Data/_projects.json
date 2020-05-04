@@ -1,8 +1,6 @@
-[
-  {
-    "project_id": "83368045c254454ba8eeb0a2e695d57b",
-    "project_name": "PowerShell",
-    "project_type": "TwitterSearch",
-    "project_filter": "#powershell"
-  }
-]
+{
+  "project_id": "ca9928adcf8a4eb8a53c2e8a715b78a0",
+  "project_name": "PowerShell",
+  "project_type": "TwitterSearch",
+  "project_filter": "#powershell"
+}
