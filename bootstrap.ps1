@@ -1,5 +1,5 @@
-Install-Module -Name UniversalDashboard -AcceptLicense
-Install-Module -Name PSTwitterAPI
+Install-Module -Name UniversalDashboard -Scope CurrentUser
+Install-Module -Name PSTwitterAPI -Scope CurrentUser
 
 $env:ApiKey = '<SET YOUR APIKEY HERE>'
 $env:ApiSecret = '<SET YOUR APISECRET HERE>'

@@ -60,4 +60,50 @@ New-UDPage -Id 'page_twitter' -Url "/twitter/:project_id" -Endpoint {
         }
     }
 
+    New-UDRow -Endpoint {
+        New-UDLayout -Columns 4 -Content {
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Influencer' -Endpoint {
+                $Data = $TwitterUsers | Sort-Object followers_count -Descending | Select-Object * -First 15
+                ForEach ($TwitterUser in $Data) { 
+                    $tweet_count = $TwitterStatuses.Where({$_.user_id -eq $TwitterUser.id}).Count
+                    $TwitterUser | Add-Member -MemberType NoteProperty -Name 'tweet_count' -Value $tweet_count
+                }
+                $Data | Out-UDChartData -LabelProperty screen_name -DataSet @(
+                    New-UdChartDataset -DataProperty "followers_count" -Label "Followers" -BackgroundColor $global:ChartPalette[7]
+                    New-UdChartDataset -DataProperty "friends_count" -Label "Following" -BackgroundColor $global:ChartPalette[6]
+                    New-UdChartDataset -DataProperty "tweet_count" -Label "Tweets" -BackgroundColor $global:ChartPalette[5]
+                )
+            }
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Mentions' -Endpoint {
+                $Data = $TwitterStatuses.entities.user_mentions.screen_name | Group-Object -NoElement | Sort-Object Count -Descending | Select-Object * -First 15
+                $Data | Out-UDChartData -LabelProperty Name -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Hastags' -Endpoint {
+                $Data = $TwitterStatuses.entities.hashtags.text | Group-Object -NoElement | Sort-Object Count -Descending | Select-Object * -First 15
+                $Data | Out-UDChartData -LabelProperty Name -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Url' -Endpoint {
+                $Data = $TwitterStatuses.entities.urls | Group-Object -Property expanded_url | Sort-Object Count -Descending | Select-Object *, @{n='display_url'; e={ $_.Group[0].display_url }} -First 15
+                $Data | Out-UDChartData -LabelProperty display_url -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+        }
+        New-UDLayout -Columns 4 -Content {
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Retweeted' -Endpoint {
+                $Data = $TwitterStatuses.retweeted_status.user.screen_name | Group-Object -NoElement | Sort-Object Count -Descending | Select-Object * -First 15
+                $Data | Out-UDChartData -LabelProperty Name -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+            New-UDChart -Type 'HorizontalBar' -Title 'Top RepliedTo' -Endpoint {
+                $Data = $TwitterStatuses.in_reply_to_screen_name | Group-Object -NoElement | Sort-Object Count -Descending | Select-Object * -First 15
+                $Data | Out-UDChartData -LabelProperty Name -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Device' -Endpoint {
+                $Data = $TwitterStatuses | % { ($_.source -Split ">|<")[-3] } | Group-Object -NoElement | Sort-Object Count -Descending | Select-Object * -First 15
+                $Data | Out-UDChartData -LabelProperty Name -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+            New-UDChart -Type 'HorizontalBar' -Title 'Top Language' -Endpoint {
+                $Data = $TwitterStatuses.lang | Group-Object -NoElement | Sort-Object Count -Descending | Select-Object * -First 15
+                $Data | Out-UDChartData -LabelProperty Name -DataProperty Count -BackgroundColor $global:ChartPalette[7]
+            } -Options @{ legend = @{ display = $false } }
+        }
+    }
 }
