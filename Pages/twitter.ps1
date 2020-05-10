@@ -29,8 +29,11 @@ New-UDPage -Id 'page_twitter' -Url "/twitter/:project_id" -Endpoint {
             New-UDCard -Title "Timespan" -Id "total_timespan" -Content { 
 
                 Try {
-                    $MeasuredObject = $TwitterStatuses | Measure-Object -Property created_at -Minimum -Maximum
-                    $TimeSpan = New-TimeSpan -Start $MeasuredObject.Minimum -End $MeasuredObject.Maximum
+
+                    $MeasuredObject = $Results | Measure-Object -Property created_at -Minimum -Maximum
+                    $StartTime = [DateTime]::ParseExact($MeasuredObject.Minimum , "ddd MMM dd HH:mm:ss %K yyyy", [CultureInfo]::InvariantCulture.DateTimeFormat)
+                    $EndTime = [DateTime]::ParseExact($MeasuredObject.Maximum , "ddd MMM dd HH:mm:ss %K yyyy", [CultureInfo]::InvariantCulture.DateTimeFormat)
+                    $TimeSpan = New-TimeSpan -Start $StartTime -End $EndTime
                     $d = $TimeSpan.Days; $h = $TimeSpan.Hours; $m = $TimeSpan.Minutes; $as = "","s"
                     $(
                     if ($d) { "{0} day{1}" -f $d, $as[$d -gt 1] }
