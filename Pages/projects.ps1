@@ -5,10 +5,12 @@ New-UDPage -Id 'page_projects' -Name 'projects' -DefaultHomePage -Endpoint {
             New-UDInput -Title "New Project" -Id 'new_project' -Content {
 
                 New-UDInputField -Type "textbox" -Name 'Name'
+                New-UDInputField -Type "select" -Name 'Endpoint' -Values @('Search Tweets', 'User Timeline') -DefaultValue 'Search Tweets'
                 New-UDInputField -Type "textbox" -Name 'Filter'
+                New-UDInputField -Type "select" -Name 'Count' -Values @('15', '50', '100', '200', '500', '1000') -DefaultValue '100'
                 
             } -Endpoint {
-                param($Name, $Filter)
+                param($Name, $Endpoint, $Filter, $Count)
             
                 If (($Name) -and ($Filter)) {
             
@@ -28,13 +30,17 @@ New-UDPage -Id 'page_projects' -Name 'projects' -DefaultHomePage -Endpoint {
                     Import-Module PSTwitterAPI
                     Set-TwitterOAuthSettings @global:TwitterOAuthSettings
                     
-                    $Results = Get-TwitterSearch_Tweets -q $Filter -count 200
-                    Show-UDToast -Message "$($Results.statuses.Count) tweets."
+                    [object[]]$Results = Switch ($Endpoint) {
+                        'Search Tweets' { Get-TwitterSearch_Tweets -q $Filter -count $Count }
+                        'User Timeline' { Get-TwitterStatuses_UserTimeline -screen_name $Filter -count $Count }
+                    }
+                    
+                    Show-UDToast -Message "$($Results.Count) tweets."
 
-                    If ($Results.statuses) {
+                    If ($Results.Count) {
             
-                        [object[]]$TwitterUsers = $Results.statuses.user | Group-Object id | ForEach-Object { $_.Group | Select-Object -First 1 } | Select-Object @{n='project_id';e={$project_id}}, *
-                        [object[]]$TwitterStatuses = $Results.statuses | Select-Object @{n='project_id';e={$project_id}}, @{n='user_id';e={$_.user.id}}, * -Exclude user
+                        [object[]]$TwitterUsers = $Results.user | Group-Object id | ForEach-Object { $_.Group | Select-Object -First 1 } | Select-Object @{n='project_id';e={$project_id}}, *
+                        [object[]]$TwitterStatuses = $Results | Select-Object @{n='project_id';e={$project_id}}, @{n='user_id';e={$_.user.id}}, * -Exclude user
 
                         $TwitterUsers | ForEach-Object { $_.created_at = (Get-Date -Date ("{0}-{1}-{2} {3}" -f ($_.created_at -Split "\s")[5,1,2,3])).ToString() }
                         $TwitterStatuses | ForEach-Object { $_.created_at = (Get-Date -Date ("{0}-{1}-{2} {3}" -f ($_.created_at -Split "\s")[5,1,2,3])).ToString() }
